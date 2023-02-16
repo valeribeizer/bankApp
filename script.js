@@ -164,3 +164,19 @@ btnTransfer.addEventListener("click", function (e) {
   inputTransferAmount.value = "";
   inputTransferTo.value = "";
 });
+
+btnClose.addEventListener('click', function(e) {
+  e.preventDefault();
+
+  if(currAccount.username === inputCloseUsername.value && currAccount.pin === Number(inputClosePin.value)) {
+    const index = accounts.findIndex(acc => acc.username === currAccount.username);
+    
+    // delete account
+    accounts.splice(index, 1);
+    inputCloseUsername.value = '';
+    inputClosePin.value = '';
+
+    // hide ui
+    containerApp.style.opacity = 0;
+  }
+});
