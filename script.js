@@ -61,9 +61,12 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
-function displayMovements(movements) {
+function displayMovements(movements, sort = false) {
   containerMovements.innerHTML = "";
-  movements.forEach(function (mov, i) {
+  
+  const moves = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  moves.forEach(function (mov, i) {
     const type = mov > 0 ? "deposit" : "withdrawal";
     const html = `
         <div class="movements__row">
@@ -165,18 +168,42 @@ btnTransfer.addEventListener("click", function (e) {
   inputTransferTo.value = "";
 });
 
-btnClose.addEventListener('click', function(e) {
+btnLoan.addEventListener("click", function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+  if (amount > 0 && currAccount.movements.some((mov) => mov >= 0.1 * amount)) {
+    // add movement
+    currAccount.movements.push(amount);
+    // update ui
+    updateUI(currAccount);
+  }
+  inputLoanAmount.value = '';
+});
+
+btnClose.addEventListener("click", function (e) {
   e.preventDefault();
 
-  if(currAccount.username === inputCloseUsername.value && currAccount.pin === Number(inputClosePin.value)) {
-    const index = accounts.findIndex(acc => acc.username === currAccount.username);
-    
+  if (
+    currAccount.username === inputCloseUsername.value &&
+    currAccount.pin === Number(inputClosePin.value)
+  ) {
+    const index = accounts.findIndex(
+      (acc) => acc.username === currAccount.username
+    );
+
     // delete account
     accounts.splice(index, 1);
-    inputCloseUsername.value = '';
-    inputClosePin.value = '';
+    inputCloseUsername.value = "";
+    inputClosePin.value = "";
 
     // hide ui
     containerApp.style.opacity = 0;
   }
+});
+
+let sorted = false;
+btnSort.addEventListener('click', function(e) {
+  e.preventDefault();
+  displayMovements(currAccount.movements, !sorted);
+  sorted = !sorted;
 });
