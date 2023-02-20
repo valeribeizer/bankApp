@@ -87,14 +87,14 @@ function formatMovementDate(date, locale) {
 
     return new Intl.DateTimeFormat(locale).format(date);
   }
-};
+}
 
 function formatCurr(value, locale, currency) {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
   }).format(value);
-};
+}
 
 function displayMovements(acc, sort = false) {
   containerMovements.innerHTML = "";
@@ -144,11 +144,7 @@ function calcDisplaySummary(acc) {
     .map((deposit) => (deposit * acc.interestRate) / 100)
     .filter((interest) => interest >= 1)
     .reduce((acc, cur) => acc + cur, 0);
-  labelSumInterest.textContent = formatCurr(
-    interest,
-    acc.locale,
-    acc.currency
-  );
+  labelSumInterest.textContent = formatCurr(interest, acc.locale, acc.currency);
 }
 
 function createUsername(accs) {
@@ -171,8 +167,29 @@ function updateUI(acc) {
   calcDisplaySummary(acc);
 }
 
+function startLogOutTimer() {
+  const tick = () => {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = 
+      'Login to get started';
+      containerApp.style.opacity = 0;
+    }
+    time--;
+  }
+
+  let time = 120;
+
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
 // event handlers
-let currAccount;
+let currAccount, timer;
 
 btnLogin.addEventListener("click", function (event) {
   event.preventDefault();
@@ -197,6 +214,8 @@ btnLogin.addEventListener("click", function (event) {
     inputLoginUsername.value = "";
     inputLoginPin.value = "";
     inputLoginPin.blur();
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
     updateUI(currAccount);
   }
 });
@@ -220,6 +239,8 @@ btnTransfer.addEventListener("click", function (e) {
     currAccount.movementsDates.push(new Date().toISOString());
     recieverAcc.movementsDates.push(new Date().toISOString());
     updateUI(currAccount);
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
   inputTransferAmount.value = "";
   inputTransferTo.value = "";
@@ -230,10 +251,14 @@ btnLoan.addEventListener("click", function (e) {
   const amount = Math.floor(inputLoanAmount.value);
   if (amount > 0 && currAccount.movements.some((mov) => mov >= 0.1 * amount)) {
     // add movement
-    currAccount.movements.push(amount);
-    currAccount.movementsDates.push(new Date().toISOString());
-    // update ui
-    updateUI(currAccount);
+    setTimeout(function () {
+      currAccount.movements.push(amount);
+      currAccount.movementsDates.push(new Date().toISOString());
+      // update ui
+      updateUI(currAccount);
+      clearInterval(timer);
+      timer = startLogOutTimer();
+    }, 2500);
   }
   inputLoanAmount.value = "";
 });
